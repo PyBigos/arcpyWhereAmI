@@ -5,6 +5,19 @@ Find a layer in a map document that references the input featureclass or shapefi
 
 #Purpose
 
+ This tool helps solve the problem associated with deleting a featureclass or shapefile.
+ Sometimes when you delete a dataset you don't know if that broke a layer a MXD.
+ This tool will indicate if a dataset is a layer source.
+ 
+# Technical Details
+
+ The script uses the os.walk function to gather the sub-folders from the the starting location.
+ A for loop is used to iterate through all the sub-folders that have been gathered.
+ The workspace environment setting is reset for every folder and the arcpy.ListFiles() gathers all the MXD's.
+ Arcpy mapping is used to open the mapdocument and loop through all the layers.
+ When a layer is found to have the same source, it is added to a python dictionary to track the result.
+ When it's done the dictionary is looped on to write out the results.
+ 
 
 #How to run
 
