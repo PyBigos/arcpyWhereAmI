@@ -1,0 +1,142 @@
+import arcpy, os
+
+startlocation = arcpy.GetParameterAsText(0)#
+
+inData = arcpy.GetParameterAsText(1)
+outputFile = arcpy.GetParameterAsText(2)
+
+found = []
+
+results = {}
+
+def storeResult(resultDictionary, dataPath, where):
+
+    if inData in results:
+
+        newVal = resultDictionary[inData] + ";" + docResult
+        resultDictionary[inData] = newVal
+    else:
+        resultDictionary[inData] = docResult
+
+    return resultDictionary
+
+
+
+def processResult(dictionaryResult, output, inFC):
+
+    if len(results) != 0:
+        #open the textfile to write
+        f = open(output, 'w')
+        f.write("Featureclass ::" + inFC + "\n")
+        #Test for multiple keys
+        resultLen = len(dictionaryResult)
+
+        if resultLen > 1:
+            moreKeys = dictionaryResult.keys()
+
+            for key in moreKeys:
+                vals = dictionaryResult[key]
+                valSplit = vals.split(";")
+                for wVal in valSplit:
+                    f.write(wVal + "\n")
+
+        else:
+            vals = dictionaryResult.values()
+            valSplit = vals[0].split(";")
+            for wVal in valSplit:
+                f.write(wVal + "\n")
+
+        f.close()
+
+    else:
+        noResultFile = open(outputFile,'w')
+        noResultFile.write("NO Results generated")
+        noResultFile.close()
+
+
+
+
+
+
+
+
+    return
+
+
+
+
+
+
+
+for root, dirs, files in os.walk(startlocation):
+    #Set the Workspace to the current location
+    arcpy.env.workspace = root
+
+    ##Create a Stepprogressor
+    arcpy.SetProgressor("step", "Compiling Directories ...", 0, len(dirs), 1)
+
+
+    #Discover map documents
+    mapList = arcpy.ListFiles("*.mxd")
+    print mapList
+    #mapPath = []
+    #loop through the documents looking for the Featureclass
+    for map in mapList:
+
+
+        #Append the Map Path
+        mapPath = root + "\\" + map
+
+        #Get a reference to the map document
+        mapDoc = arcpy.mapping.MapDocument(mapPath)
+
+        #Gather the dataframes
+        dframeList = arcpy.mapping.ListDataFrames(mapDoc)
+
+        #Dataframe numbers
+        dframeNum = len(dframeList)
+
+
+
+        if dframeNum == 1:
+            #print "ASdfsadf"
+            #Gather a list of layers from the
+            listLayer = arcpy.mapping.ListLayers(mapDoc, "", dframeList[0])
+
+            for lyr in listLayer:
+                if lyr.isFeatureLayer:
+                    if lyr.dataSource == inData:
+
+                        docResult = mapDoc.filePath
+
+                        found.append(mapDoc.filePath)
+
+                        storeResult(results, inData, docResult)
+
+
+        elif dframeNum > 1:
+            print "will have to loop "
+
+            #List The dataframes in the map document
+            listDframe = arcpy.mapping.ListDataFrames(mapDoc)
+
+            #Loop the frames
+            for frame in listDframe:
+                listLayer = arcpy.mapping.ListLayers(mapDoc, "", frame)
+
+                for lyr in listLayer:
+                    if lyr.isFeatureLayer:
+                        if lyr.dataSource == inData:
+                            docResult = mapDoc.filePath
+
+                            found.append(mapDoc.filePath)
+
+                            storeResult(results, inData, docResult)
+
+        arcpy.SetProgressorPosition()
+        del mapDoc
+
+
+#Produce the Textfile
+#Final test of the result dictionary
+processResult(results, outputFile, inData)
