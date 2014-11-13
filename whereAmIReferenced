@@ -99,7 +99,7 @@ for root, dirs, files in os.walk(startlocation):
 
 
         if dframeNum == 1:
-            #print "ASdfsadf"
+           
             #Gather a list of layers from the
             listLayer = arcpy.mapping.ListLayers(mapDoc, "", dframeList[0])
 
